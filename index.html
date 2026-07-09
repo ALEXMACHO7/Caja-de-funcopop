@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Rasca y Gana tu Premio</title>
+    <style>
+        body { background: #0f172a; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; font-family: sans-serif; text-align: center; margin: 0; }
+        #contenedor-raspa { position: relative; width: 300px; height: 200px; background: #334155; border-radius: 20px; overflow: hidden; margin: 20px; touch-action: none; border: 4px solid #475569; }
+        canvas { position: absolute; top: 0; left: 0; z-index: 10; cursor: pointer; }
+        #resultado { position: absolute; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 5; background: #1e293b; }
+        .emoji { font-size: 80px; }
+        .texto-premio { font-size: 22px; font-weight: bold; color: #ffaa00; margin-top: 10px; }
+        .instruccion { font-size: 14px; color: #94a3b8; padding: 0 20px; }
+        .firma-alex { margin-top: 30px; font-family: 'Georgia', serif; font-style: italic; font-size: 24px; color: rgba(255, 255, 255, 0.4); }
+    </style>
+</head>
+<body>
+
+    <h2 id="titulo">¡Rasca aquí para ganar!</h2>
+    <div id="contenedor-raspa">
+        <div id="resultado"></div>
+        <canvas id="canvas" width="300" height="200"></canvas>
+    </div>
+    <p id="instruccion"></p>
+    <div class="firma-alex">Alex.</div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const resultado = document.getElementById('resultado');
+        const titulo = document.getElementById('titulo');
+        const instruccion = document.getElementById('instruccion');
+
+        const premios = [
+            { nombre: "Traje de pez", emoji: "🐟", prob: 50 },
+            { nombre: "Chef", emoji: "🧑‍🍳", prob: 25 },
+            { nombre: "Verano", emoji: "☀️🍹", prob: 15 },
+            { nombre: "Sushi", emoji: "🍣", prob: 9 },
+            { nombre: "Sushi de oro", emoji: "🍣🪙", prob: 1 }
+        ];
+
+        // Lógica de juego con probabilidad
+        if (!localStorage.getItem("yaJugoRasca")) {
+            let azar = Math.random() * 100;
+            let suma = 0;
+            let indice = 0;
+            for(let i = 0; i < premios.length; i++) {
+                suma += premios[i].prob;
+                if (azar <= suma) {
+                    indice = i;
+                    break;
+                }
+            }
+            localStorage.setItem("yaJugoRasca", "true");
+            localStorage.setItem("premioIndex", indice);
+        }
+
+        let p = premios[localStorage.getItem("premioIndex")];
+        resultado.innerHTML = `<div class="emoji">${p.emoji}</div><div class="texto-premio">Ganas: ${p.nombre}</div>`;
+        instruccion.innerText = "Quita una cap y mándaselo al priv a Alex y reclama tu premio";
+
+        // Dibujar capa gris
+        ctx.fillStyle = "#94a3b8";
+        ctx.fillRect(0, 0, 300, 200);
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 22px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText("RASPA AQUÍ", 150, 110);
+
+        // Función para raspar (móvil y PC)
+        function raspar(e) {
+            ctx.globalCompositeOperation = 'destination-out';
+            const rect = canvas.getBoundingClientRect();
+            const x = (e.clientX || (e.touches ? e.touches[0].clientX : 0)) - rect.left;
+            const y = (e.clientY || (e.touches ? e.touches[0].clientY : 0)) - rect.top;
+            
+            ctx.beginPath();
+            ctx.arc(x, y, 25, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        canvas.addEventListener('mousemove', (e) => { if (e.buttons > 0) raspar(e); });
+        canvas.addEventListener('touchmove', (e) => { e.preventDefault(); raspar(e); }, {passive: false});
+    </script>
+</body>
+</html>
